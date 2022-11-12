@@ -1,0 +1,46 @@
+{
+  "name": "hbplugin-discord-auto-mute",
+  "packageManager": "yarn@3.2.4",
+  "version": "1.0.0",
+  "description": "My cool Hindenburg plugin",
+  "keywords": [
+    "hindenburg",
+    "plugin",
+    "among us"
+  ],
+  "license": "GPL-3.0-only",
+  "files": [
+    "dist",
+    "config.schema.json"
+  ],
+  "main": "./dist/index.js",
+  "types": "./index.ts",
+  "publishConfig": {
+    "types": "./dist/index.d.ts"
+  },
+  "scripts": {
+    "publish": "yarn npm publish --access public",
+    "build": "tsc --project ./",
+    "watch": "tsc --watch --project ./",
+    "prepack": "yarn build"
+  },
+  "engines": {
+    "node": ">=14",
+    "hindenburg": "1.1.*"
+  },
+  "devDependencies": {
+    "@skeldjs/hindenburg": "^1.1.19",
+    "typescript": "latest"
+  },
+  "plugin": {
+    "loadOrder": "none",
+    "defaultConfig": {
+      "message": "Hello, world!"
+    }
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "mariadb": "^3.0.2",
+    "socket.io": "^4.5.3"
+  }
+}
