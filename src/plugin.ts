@@ -66,6 +66,7 @@ async function createTables() {
             client_id INTEGER NOT NULL,
             roomcode VARCHAR(6) NOT NULL,
             username VARCHAR(10) NOT NULL,
+            maxplayers INTEGER NOT NULL,
             is_ghost BOOLEAN NOT NULL,
             is_host BOOLEAN NOT NULL,
             discord_user_id BIGINT UNSIGNED,
@@ -81,11 +82,11 @@ async function createTables() {
     }
 }
 
-async function addPlayer(client_id: number, username: string, roomcode: string,) {
+async function addPlayer(client_id: number, username: string, roomcode: string, maxplayers: number,) {
     let conn;
     try {
         conn = await pool.getConnection();
-        let sql = `INSERT IGNORE INTO players (client_id, roomcode, username, is_ghost, is_host) VALUES(${client_id}, '${roomcode}', '${username}', FALSE, FALSE)`
+        let sql = `INSERT IGNORE INTO players (client_id, roomcode, username, maxplayers, is_ghost, is_host) VALUES(${client_id}, '${roomcode}', '${username}', '${maxplayers}', FALSE, FALSE)`
         await conn.query(sql)
     } finally {
         if (conn) conn.release();
@@ -190,11 +191,12 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
     @EventListener("player.join")
     async onPlayerJoin(ev: PlayerJoinEvent<Room>) {
         const roomcode = GameCode.convertIntToString(ev.player.room.code)
-        await addPlayer(ev.player.clientId, ev.player.username, roomcode);
+        await addPlayer(ev.player.clientId, ev.player.username, roomcode, ev.room.settings.maxPlayers);
         const map = new Map();
         map.set("client_id", ev.player.clientId)
         map.set("roomcode", roomcode)
         map.set("username", ev.player.username)
+        map.set("maxplayers", ev.room.settings.maxPlayers)
         io.sockets.to('main').emit("on_join", map);
     }
 
