@@ -168,13 +168,7 @@ io.on("connection", async (socket) => {
     });
   });
 
-  setInterval(() => {
-    io.sockets.to('main').emit('message', 'what is going on, party people?');
-  }, 3000);
-  
-  setInterval(() => {
-    io.sockets.to('second').emit('message', 'anyone in this room yet?');
-  }, 3000);
+
 
 @HindenburgPlugin("hbplugin-discord-auto-mute")
 export class DiscordAutoMutePlugin extends RoomPlugin {
