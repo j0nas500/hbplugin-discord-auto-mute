@@ -38,6 +38,16 @@ const HINDENBURG_MYSQL_USER = config.MYSQL_USER
 const HINDENBURG_MYSQL_PASSWORD = config.MYSQL_PASSWORD
 const HINDENBURG_MYSQL_HOST = config.MYSQL_HOST
 const HINDENBURG_MYSQL_PORT = Number(config.MYSQL_PORT)
+const JWT = config.JWT
+
+const isValidJwt = (header: string) => {
+    const token = header.split(' ')[1];
+    if (token === JWT) {
+      return true;
+    } else {
+      return false;
+    }
+};
 
 const pool = mariadb.createPool({
     host: HINDENBURG_MYSQL_HOST,
@@ -131,21 +141,40 @@ async function updateIsGhost(client_id: number, is_ghost: string) {
 
 
 const io = new Server(3000, { /* options */ });
+io.use((socket, next) => {
+    const header = socket.handshake.headers['authorization'];
+    console.log(header)
+    if (isValidJwt(header as string)) return next();
+    return next(new Error('authentication error'))
+});
+
 io.on("connection", async (socket) => {
     //await createTables();
     console.log("Tables created");
     //console.log(socket)
+    socket.on('room', room => {
+        console.log(room);
+        socket.join(room);
+    });
 
     socket.on("on_mute_deafen", (data) => {
-        io.emit("on_mute_deafen", data)
+        io.sockets.to('second').emit("on_mute_deafen", data)
     });
     socket.on("on_unmute_undeafen", (data) => {
-        io.emit("on_unmute_undeafen", data)
+        io.sockets.to('second').emit("on_unmute_undeafen", data)
     });
     socket.on("on_mute", (data) => {
-        io.emit("on_mute", data)
+        io.sockets.to('second').emit("on_mute", data)
     });
   });
+
+  setInterval(() => {
+    io.sockets.to('main').emit('message', 'what is going on, party people?');
+  }, 3000);
+  
+  setInterval(() => {
+    io.sockets.to('second').emit('message', 'anyone in this room yet?');
+  }, 3000);
 
 @HindenburgPlugin("hbplugin-discord-auto-mute")
 export class DiscordAutoMutePlugin extends RoomPlugin {
@@ -172,7 +201,7 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
         map.set("client_id", ev.player.clientId)
         map.set("roomcode", roomcode)
         map.set("username", ev.player.username)
-        io.emit("on_join", map);
+        io.sockets.to('main').emit("on_join", map);
     }
 
     @EventListener("player.leave")
@@ -186,7 +215,7 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
         map.set("message_id", messageId)
         map.set("roomcode", GameCode.convertIntToString(ev.room.code))
         map.set("username", ev.player.username)
-        io.emit("on_leave", map);
+        io.sockets.to('main').emit("on_leave", map);
     }
 
     @EventListener("player.setname")
@@ -197,19 +226,19 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
         map.set("client_id", ev.player.clientId)
         map.set("roomcode", roomcode)
         map.set("username", ev.newName)
-        io.emit("on_join", map);
+        io.sockets.to('main').emit("on_join", map);
     }
 
     @EventListener("room.gamestart")
     async onGameStart(ev: RoomGameStartEvent) {
         const roomcode = GameCode.convertIntToString(ev.room.code)
-        io.emit("on_game_start", roomcode);
+        io.sockets.to('main').emit("on_game_start", roomcode);
     }
 
     @EventListener("room.gameend")
     async onGameEnd(ev: RoomGameEndEvent) {
         const roomcode = GameCode.convertIntToString(ev.room.code)
-        io.emit("on_game_end", roomcode);
+        io.sockets.to('main').emit("on_game_end", roomcode);
     }
 
     @EventListener("player.die")
@@ -220,13 +249,13 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
     @EventListener("player.startmeeting")
     async onPlayerStartMeeting(ev: PlayerStartMeetingEvent<Room>) {
         const roomcode = GameCode.convertIntToString(ev.room.code)
-        io.emit("on_player_start_meeting", roomcode);
+        io.sockets.to('main').emit("on_player_start_meeting", roomcode);
     }
 
     @EventListener("meeting.votingcomplete")
     async onMeetingVotingComplete(ev: MeetingHudVotingCompleteEvent<Room>) {
         const roomcode = GameCode.convertIntToString(ev.room.code)
-        io.emit("on_meeting_voting_complete", roomcode);
+        io.sockets.to('main').emit("on_meeting_voting_complete", roomcode);
     }
 
 
