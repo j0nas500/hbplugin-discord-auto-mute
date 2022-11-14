@@ -71,7 +71,6 @@ async function createTables() {
             discord_user_id BIGINT UNSIGNED,
             discord_message_id BIGINT UNSIGNED,
             discord_voice_id BIGINT UNSIGNED,            
-            discord_guild_id BIGINT UNSIGNED,
             PRIMARY KEY (client_id));`
         await conn.query(sql)
         sql = `DELETE FROM players`
@@ -81,7 +80,7 @@ async function createTables() {
     }
 }
 
-async function addPlayer(client_id: number, username: string, roomcode: string,) {
+async function addPlayer(client_id: number, username: string, roomcode: string) {
     let conn;
     try {
         conn = await pool.getConnection();
@@ -150,21 +149,20 @@ io.use((socket, next) => {
 
 io.on("connection", async (socket) => {
     //await createTables();
-    console.log("Tables created");
+    //console.log("Tables created");
     //console.log(socket)
-    socket.on('room', room => {
+    socket.on("room", room => {
         console.log(room);
         socket.join(room);
     });
-
     socket.on("on_mute_deafen", (data) => {
-        io.sockets.to('second').emit("on_mute_deafen", data)
+        io.sockets.to("second").emit("on_mute_deafen", data)
     });
     socket.on("on_unmute_undeafen", (data) => {
-        io.sockets.to('second').emit("on_unmute_undeafen", data)
+        io.sockets.to("second").emit("on_unmute_undeafen", data)
     });
     socket.on("on_mute", (data) => {
-        io.sockets.to('second').emit("on_mute", data)
+        io.sockets.to("second").emit("on_mute", data)
     });
   });
 
@@ -195,7 +193,7 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
         map.set("client_id", ev.player.clientId)
         map.set("roomcode", roomcode)
         map.set("username", ev.player.username)
-        io.sockets.to('main').emit("on_join", map);
+        io.sockets.to("main").emit("on_join", map);
     }
 
     @EventListener("player.leave")
@@ -209,7 +207,7 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
         map.set("message_id", messageId)
         map.set("roomcode", GameCode.convertIntToString(ev.room.code))
         map.set("username", ev.player.username)
-        io.sockets.to('main').emit("on_leave", map);
+        io.sockets.to("main").emit("on_leave", map);
     }
 
     @EventListener("player.setname")
@@ -220,19 +218,19 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
         map.set("client_id", ev.player.clientId)
         map.set("roomcode", roomcode)
         map.set("username", ev.newName)
-        io.sockets.to('main').emit("on_join", map);
+        io.sockets.to("main").emit("on_join", map);
     }
 
     @EventListener("room.gamestart")
     async onGameStart(ev: RoomGameStartEvent) {
         const roomcode = GameCode.convertIntToString(ev.room.code)
-        io.sockets.to('main').emit("on_game_start", roomcode);
+        io.sockets.to("main").emit("on_game_start", roomcode);
     }
 
     @EventListener("room.gameend")
     async onGameEnd(ev: RoomGameEndEvent) {
         const roomcode = GameCode.convertIntToString(ev.room.code)
-        io.sockets.to('main').emit("on_game_end", roomcode);
+        io.sockets.to("main").emit("on_game_end", roomcode);
     }
 
     @EventListener("player.die")
@@ -243,13 +241,13 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
     @EventListener("player.startmeeting")
     async onPlayerStartMeeting(ev: PlayerStartMeetingEvent<Room>) {
         const roomcode = GameCode.convertIntToString(ev.room.code)
-        io.sockets.to('main').emit("on_player_start_meeting", roomcode);
+        io.sockets.to("main").emit("on_player_start_meeting", roomcode);
     }
 
     @EventListener("meeting.votingcomplete")
-    async onMeetingVotingComplete(ev: MeetingHudVotingCompleteEvent<Room>) {
+    async onMeetingVotingComplete(ev: MeetingHudVotingCompleteEvent<Room>) {        
         const roomcode = GameCode.convertIntToString(ev.room.code)
-        io.sockets.to('main').emit("on_meeting_voting_complete", roomcode);
+        io.sockets.to("main").emit("on_meeting_voting_complete", roomcode);
     }
 
 
