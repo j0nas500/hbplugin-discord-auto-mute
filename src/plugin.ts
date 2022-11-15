@@ -235,7 +235,9 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
 
     @EventListener("player.die")
     async onPlayerDie(ev: PlayerDieEvent<Room>) {
-        await updateIsGhost(ev.player.clientId, "TRUE")        
+        await updateIsGhost(ev.player.clientId, "TRUE")
+        const roomcode = GameCode.convertIntToString(ev.room.code)
+        io.sockets.to("main").emit("on_player_die", roomcode);     
     }
 
     @EventListener("player.startmeeting")
