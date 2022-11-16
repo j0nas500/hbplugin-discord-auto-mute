@@ -77,6 +77,12 @@ async function createTables() {
         await conn.query(sql)
         sql = `DELETE FROM players`
         await conn.query(sql)
+        let sql = `CREATE TABLE IF NOT EXISTS linked_players(
+            client_id INTEGER NOT NULL,
+            username VARCHAR(10) NOT NULL,
+            discord_user_id BIGINT UNSIGNED,        
+            PRIMARY KEY (client_id));`
+        await conn.query(sql)
     } finally {
         if (conn) conn.release();
     }
