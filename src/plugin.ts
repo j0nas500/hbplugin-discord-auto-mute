@@ -153,7 +153,7 @@ async function resetIsGhost(roomcode: string) {
     let conn;
     try {
         conn = await pool.getConnection();
-        let sql = `UPDATE players SET is_ghost = FALSE WHERE roomcode = ${roomcode}`
+        let sql = `UPDATE players SET is_ghost = FALSE WHERE roomcode = '${roomcode}'`
         await conn.query(sql)
     } finally {
         if (conn) conn.release();
