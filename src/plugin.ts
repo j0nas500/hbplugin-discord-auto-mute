@@ -149,6 +149,18 @@ async function updateIsGhost(client_id: number, is_ghost: string) {
     }
 }
 
+async function resetIsGhost(roomcode: string) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        let sql = `UPDATE players SET is_ghost = FALSE WHERE roomcode = ${roomcode}`
+        await conn.query(sql)
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+
 
 
 
@@ -254,6 +266,7 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
     @EventListener("room.gameend")
     async onGameEnd(ev: RoomGameEndEvent) {
         const roomcode = GameCode.convertIntToString(ev.room.code)
+        await resetIsGhost(roomcode)
         io.sockets.to("main").emit("on_game_end", roomcode);
     }
 
