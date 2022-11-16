@@ -11,7 +11,8 @@ import {
     RoomGameEndEvent,
     MeetingHudVotingCompleteEvent,
     Room,
-    GameCode
+    GameCode,
+    PlayerSetColorEvent
 } from "@skeldjs/hindenburg";
 import { Server } from "socket.io";
 
@@ -66,6 +67,7 @@ async function createTables() {
             client_id INTEGER NOT NULL,
             roomcode VARCHAR(6) NOT NULL,
             username VARCHAR(10) NOT NULL,
+            color_id INTEGER,
             is_ghost BOOLEAN NOT NULL,
             is_host BOOLEAN NOT NULL,
             discord_user_id BIGINT UNSIGNED,
@@ -107,6 +109,17 @@ async function updatePlayerName(client_id: number, new_username: string) {
     try {
         conn = await pool.getConnection();
         let sql = `UPDATE players SET username = '${new_username}' WHERE client_id = ${client_id}`
+        await conn.query(sql)
+    } finally {
+        if (conn) conn.release();
+    }
+}
+
+async function updatePlayerColor(client_id: number, color: number) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        let sql = `UPDATE players SET color_id = '${color}' WHERE client_id = ${client_id}`
         await conn.query(sql)
     } finally {
         if (conn) conn.release();
@@ -219,6 +232,17 @@ export class DiscordAutoMutePlugin extends RoomPlugin {
         map.set("roomcode", roomcode)
         map.set("username", ev.newName)
         io.sockets.to("main").emit("on_join", map);
+    }        
+
+    @EventListener("player.setcolor")
+    async onPlayerSetColor(ev: PlayerSetColorEvent<Room>) {
+        await updatePlayerColor(ev.player.clientId, ev.newColor)
+        const roomcode = GameCode.convertIntToString(ev.player.room.code)
+        const map = new Map();
+        map.set("client_id", ev.player.clientId)
+        map.set("roomcode", roomcode)
+        map.set("username", ev.player.username)
+        io.sockets.to("main").emit("on_setcolor", map);
     }
 
     @EventListener("room.gamestart")
